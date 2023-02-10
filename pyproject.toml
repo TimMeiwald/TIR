@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "TIR"
+version = "0.1.0"
+description = ""
+authors = ["Tim Meiwald <tim.meiwald@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+packratparsergenerator = {git = "https://github.com/TimMeiwald/PackratParserGenerator", branch = "main"}
+elfgenerator = {git = "https://github.com/TimMeiwald/ELFGenerator", branch = "master"}
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
