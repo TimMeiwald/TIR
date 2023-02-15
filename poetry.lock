@@ -24,7 +24,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7
 
 [[package]]
 name = "elfgenerator"
-version = "0.0.11"
+version = "0.0.13"
 description = "A ELF File Generator using Python"
 category = "main"
 optional = false
@@ -38,7 +38,7 @@ test = ["pytest (>=7.1.2,<8.0.0)", "coverage (>=6.4.2,<7.0.0)", "genbadge[covera
 type = "git"
 url = "https://github.com/TimMeiwald/ELFGenerator"
 reference = "master"
-resolved_reference = "077d886d06edfce7b9c81b73355876639241b380"
+resolved_reference = "a038f8e2b6460fbd8b58df1b95aebf091f022b8d"
 
 [[package]]
 name = "exceptiongroup"

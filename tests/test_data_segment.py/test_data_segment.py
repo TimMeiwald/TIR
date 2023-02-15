@@ -37,8 +37,8 @@ def test_basic_size_tracking():
     s3 = SymbolTableEntry("Test", enum, 2, 100, 0) # 200 bytes
     d = DataSegment(7)
     d.set_symbol(s)
-    assert d.position == 1
+    assert d.end_position == 1
     d.set_symbol(s2)
-    assert d.position == 5
+    assert d.end_position == 5
     d.set_symbol(s3)
-    assert d.position == 205
+    assert d.end_position == 205

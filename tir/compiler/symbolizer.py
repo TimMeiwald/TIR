@@ -1,6 +1,7 @@
 from tir.parser.parser import Rules
 from enum import IntEnum
 from tir.compiler.compiler import Compiler
+from elfgenerator.Binary import Binary
 class SymbolTableEntry():
 
     def __init__(self, name: str, typ: IntEnum, size: int, quantity: int, value=None):
@@ -19,12 +20,13 @@ class DataSegment():
     def __init__(self, permissions: int):
         self.symbols = []
         self.lookup = {}
-        self.position = 0
+        self.start_position = 0
+        self.end_position = 0
         self.permissions = permissions
     
     def set_symbol(self, symbol_entry: SymbolTableEntry):
-        symbol_entry.address = self.position
-        self.position += symbol_entry.size*symbol_entry.quantity
+        symbol_entry.address = self.end_position
+        self.end_position += symbol_entry.size*symbol_entry.quantity
         self.lookup[symbol_entry.name] = len(self.symbols)
         self.symbols.append(symbol_entry)
 
@@ -35,14 +37,26 @@ class DataSegment():
         except KeyError as e:
             raise KeyError(f"Could not find symbol: {symbol_name} \n{e}")
     
+    def get_binary(self):
+        bin = Binary(0,0,0)
+        for symbol in self.symbols:
+            size = symbol.size*symbol.quantity
+            value = symbol.value
+            if(value != None):
+                bin += Binary(value, size, size)
+        return bin
+
     def __repr__(self):
         string = ""
         for symbol in self.symbols:
             string += symbol.__repr__()
             string += "\n"
+        string += f"Binary: {self.get_binary()}\n"
         return string 
 
     def shift_memory_addresses(self, shift_size: int):
+        self.start_position += shift_size
+        self.end_position += shift_size
         for entry in self.symbols:
             entry.address += shift_size
         
@@ -51,9 +65,9 @@ class SymbolTable():
 
 
     def __init__(self):
-        self.BSS = DataSegment(6) # -RW -> Is for Data initialised at runtime
-        self.DATA = DataSegment(6) # -RW -> For Data stored at compile time
-        self.RODATA = DataSegment(4) # -R- 
+        self.BSS = DataSegment(6) # 6 -RW -> Is for Data initialised at runtime
+        self.DATA = DataSegment(6) # 6 -RW -> For Data stored at compile time
+        self.RODATA = DataSegment(4) # 4 -R- 
         self.entry_point = None
 
     def get_symbol(self, symbol_name: str):
@@ -76,7 +90,7 @@ class SymbolTable():
         data_segments = [self.DATA, self.RODATA, self.BSS]
         page_count = 0 # 0th page for program header entries and header. 64 Bytes + 56 Bytes per segment * 3 segments = 232 bytes
         for segment in data_segments:
-            size_bytes = segment.position
+            size_bytes = segment.end_position
             size_pages = ((size_bytes//page_size)+1)
             size_bytes = size_pages*page_size # 1 Page larger than integer div
             shift = size_bytes + page_count*page_size
@@ -87,10 +101,7 @@ class SymbolTable():
 
     def symbolize(self, AST):
         """Runs through the AST and extracts all data segments, then returns the TEXT AST Node for further compiling."""
-        print("#### AST ####")
         AST.pretty_print()
-        print("\n\n\n")
-        print("#### Symbol Table Start ####")
         text = None
         for child in AST.children:
             if(child.type == Rules.DATA):
@@ -104,10 +115,7 @@ class SymbolTable():
                 break
             else:
                 raise NotImplementedError(f"Have not implemented node of type: {child.type} yet.")
-        print(self)
         self.linearize_memory_addresses(4096)
-        print(self)
-        print("\n\n\n")
         return text
 
     def symbolize_DATA(self, data_node):
@@ -163,13 +171,13 @@ class SymbolTable():
         return type, size, quantity
     
     def __repr__(self):
-        string = ""
+        string = "\n################# SYMBOL TABLE ################### \n"
         string += f"entry_point: {self.entry_point}\n"
         string +="DATA\n"
         string += self.DATA.__repr__()
         string +="\nRODATA\n"
         string += self.RODATA.__repr__()
         string +="\nBSS\n"
-        string += self.BSS.__repr__()
+        string += self.BSS.__repr__() + "\n"
         return string
     

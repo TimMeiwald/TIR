@@ -2,16 +2,25 @@ from tir.parser.parser import Rules
 from elfgenerator.Binary import Binary
 from collections import deque
 import tir.x86_64.x86_64 as asm
-class TEXT():
+class InstructionSegment():
 
 
-    def __init__(self):
+    def __init__(self, entry_point):
         self.instr_stack = deque()
         self.comment_stack = deque()
+        self.permissions = 5
+        self.start_position = 0
+        self.end_position = 0
+        self.set_entry_point(entry_point)
 
     def push_instr(self, instr: Binary, comment: str = ""):
+        self.end_position += instr.size
         self.instr_stack.append(instr)
         self.comment_stack.append(comment)
+
+    def set_entry_point(self, entry_point):
+        self.start_position += entry_point
+        self.end_position += entry_point
 
     def __repr__(self):
         response = ""
@@ -38,18 +47,16 @@ class Compiler():
 
     def __init__(self, symbol_table, TEXT_node):
         self.symbol_table = symbol_table
-        self.TEXT = TEXT()
+        entry_point = self.symbol_table.entry_point
+        self.TEXT = InstructionSegment(entry_point)
         self.start_compiler(TEXT_node)
 
     def __repr__(self):
-        string = self.symbol_table.__repr__() + "\n\n"
+        string = "############# COMPILER START ########### \n"
         string += self.TEXT.__repr__()
         return string
 
     def start_compiler(self, TEXT_node):
-        print("#### Compiler Start ####")
-        TEXT_node.pretty_print()
-        print("\n\n\n")
         for child in TEXT_node.children:
             self.text_statement(child)
             
@@ -120,11 +127,19 @@ class Compiler():
 
     def function_call(self, destination, func_call_node):
         func_call_name = func_call_node.children[0].content
-        if(func_call_name == "syscall"):
-            self.load_symbol("EAX", "x")
-            self.load_symbol("EDI", "x")
-            self.TEXT.push_instr(asm.syscall(), "syscall")
-        else:
-            raise NotImplementedError
+        syscall_regs = ["EAX", "EDI"]
+        syscall_regs_as_int = [0,7]
+        arguments = func_call_node.children
+        for index, argument in enumerate(arguments):
+            if(index == 0):
+                continue
+            if(argument.type == Rules.int):
+                self.TEXT.push_instr(asm.load_const_to_register_displacement_only_32_bit(syscall_regs_as_int[index-1], int(argument.content)), f"load immediate: {argument.content} to register: {syscall_regs[index-1]}")
+            elif(argument.type == Rules.variable):
+                self.load_symbol(syscall_regs[index-1], argument.content)
+
+            else:
+                raise NotImplementedError
+        self.TEXT.push_instr(asm.syscall(), "syscall")
 
 
