@@ -57,10 +57,10 @@ class DataSegment():
         return string 
 
     def shift_memory_addresses(self, shift_size: int):
-        self.start_position += shift_size + 0x400000
-        self.end_position += shift_size + 0x400000
+        self.start_position += shift_size
+        self.end_position += shift_size
         for entry in self.symbols:
-            entry.address += shift_size + 0x400000
+            entry.address += shift_size
         
 
 class SymbolTable():
@@ -95,7 +95,7 @@ class SymbolTable():
             size_bytes = segment.end_position
             size_pages = ((size_bytes//page_size)+1)
             size_bytes = size_pages*page_size # 1 Page larger than integer div
-            shift = size_bytes + page_count*page_size
+            shift = size_bytes + page_count*page_size + 0x400000
             page_count += size_pages
             segment.shift_memory_addresses(shift)
         self.entry_point = (page_count+1)*page_size + 0x400000
