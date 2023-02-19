@@ -94,10 +94,12 @@ class SymbolTable():
         poffset = 64+56*4
         for segment in data_segments:
             size_bytes = segment.end_position - segment.start_position
+
             size_pages = ((size_bytes//page_size)+1)
-            size_bytes = size_pages*page_size # 1 Page larger than integer div
-            shift = size_bytes + page_count*page_size + 0x400000
+            size_bytes_page = size_pages*page_size # 1 Page larger than integer div
+            shift = size_bytes_page + page_count*page_size + 0x400000 + poffset
             page_count += size_pages
+            poffset += size_bytes
             segment.shift_memory_addresses(shift)
         self.entry_point = (page_count+1)*page_size + 0x400000
 

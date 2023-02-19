@@ -52,7 +52,7 @@ def test_very_basic_compiler_operation2():
     with open(path, "wb+") as fp:
         fp.write(exe.binary())
     # Running it primarily to check no exceptions thrown
-    #assert 0 == 1
+    assert 0 == 1
 
 
 def test_basic_compiler_operation():

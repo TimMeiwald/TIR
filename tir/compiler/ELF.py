@@ -88,8 +88,8 @@ class ELF_x86_64(AbstractELFClass):
         paddr = running_total_size
         flags = DATA.permissions
         filesz = DATA.end_position - DATA.start_position
-        memsz = filesz#((filesz//page_size)+1)*4096
-        align=0
+        memsz = DATA.end_position - DATA.start_position
+        align=page_size
         DATA_program_header = s.Segment(type, offset, vaddress, paddr, filesz, memsz, flags, align)
         self.program_headers.append(DATA_program_header)
         print(f"Added DATA: {offset, type, vaddress, paddr, flags, filesz, memsz, align}")
@@ -105,8 +105,8 @@ class ELF_x86_64(AbstractELFClass):
         paddr = running_total_size
         flags = RODATA.permissions
         filesz = RODATA.end_position - RODATA.start_position
-        memsz = filesz#((filesz//page_size)+1)*4096
-        align=0
+        memsz = RODATA.end_position - RODATA.start_position
+        align=page_size
         RODATA_program_header = s.Segment(type, offset, vaddress, paddr, filesz, memsz, flags, align)
         self.program_headers.append(RODATA_program_header)
         print(f"Added RODATA: {offset, type, vaddress, paddr, flags, filesz, memsz, align}")
@@ -122,8 +122,8 @@ class ELF_x86_64(AbstractELFClass):
         paddr = running_total_size
         flags = BSS.permissions
         filesz = 0
-        memsz = 0#((filesz//page_size)+1)*4096
-        align=0
+        memsz = BSS.end_position - BSS.start_position
+        align=page_size
         BSS_program_header = s.Segment(type, offset, vaddress, paddr, filesz, memsz, flags, align)
         self.program_headers.append(BSS_program_header)
         print(f"Added BSS: {offset, type, vaddress, paddr, flags, filesz, memsz, align}")
@@ -136,12 +136,16 @@ class ELF_x86_64(AbstractELFClass):
         flags = TEXT.permissions
         filesz = TEXT.end_position - TEXT.start_position
         vaddress = TEXT.start_position + paddr
-        memsz = filesz # ((filesz//page_size)+1)*4096
-        align=0
+        memsz = filesz # self.memsz_calc(filesz, page_size=) # ((filesz//page_size)+1)*4096
+        align=page_size
         TEXT_program_header = s.Segment(type, offset, vaddress, paddr, filesz, memsz, flags, align)
         self.program_headers.append(TEXT_program_header)
         print(f"Added TEXT: {offset, type, vaddress, paddr, flags, filesz, memsz, align}")
         running_total_size += filesz
         self.e_entry = h.e_entry(vaddress,EI_CLASS=self.EI_CLASS)
     
+    def memsz_calc(self, filesz, page_size):
+        if(filesz == 0):
+            return 0
+        return ((filesz//page_size)+1)*4096
 
