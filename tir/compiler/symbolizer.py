@@ -91,8 +91,9 @@ class SymbolTable():
     def linearize_memory_addresses(self, page_size):
         data_segments = [self.DATA, self.RODATA, self.BSS]
         page_count = 0 # 0th page for program header entries and header. 64 Bytes + 56 Bytes per segment * 3 segments = 232 bytes
+        poffset = 64+56*4
         for segment in data_segments:
-            size_bytes = segment.end_position
+            size_bytes = segment.end_position - segment.start_position
             size_pages = ((size_bytes//page_size)+1)
             size_bytes = size_pages*page_size # 1 Page larger than integer div
             shift = size_bytes + page_count*page_size + 0x400000
