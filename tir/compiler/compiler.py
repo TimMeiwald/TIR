@@ -89,7 +89,7 @@ class Compiler():
 
     def add(self, destination, add_node):
         LHS = add_node.children[0]
-        RHS = add_node.children[0]
+        RHS = add_node.children[1]
         if(LHS.type == Rules.variable and RHS.type == Rules.variable):
             p1, s1 = self.symbol_table.get_symbol(LHS.content)
             p2, s2 = self.symbol_table.get_symbol(RHS.content)
@@ -105,6 +105,7 @@ class Compiler():
             # Since both int immediates can be summed at compile time
             comment = f"mov EAX, {int(LHS.content) + int(RHS.content)}"
             const = int(LHS.content) + int(RHS.content)
+            print("40 + 20 is :", const)
             self.TEXT.push_instr(asm.load_const_to_register_displacement_only_32_bit(0, const), comment)
             self.load_to_symbol("EAX", destination)
             return

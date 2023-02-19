@@ -26,6 +26,35 @@ def test_very_basic_compiler_operation():
     # Running it primarily to check no exceptions thrown
     assert 0 == 1
 
+def test_very_basic_compiler_operation2():
+    src = ""
+    src += "DATA\n"
+    src += "x = int_32 is 60\n"
+    src += "y = int_32 is 47\n"
+    src += "TEXT\n"
+    src += "z = syscall(x, y)\n"
+    src += "\n"
+    parser = Grammar_Parser()
+    resultant_position, bool, node = parser.parse(src, parser.grammar)
+    if(node == None):
+        raise Exception("Failed to Parse", resultant_position, bool)
+    sym_table = SymbolTable()
+    text_node = sym_table.symbolize(node)
+    print(sym_table)
+    compiler = Compiler(sym_table, text_node)
+    print(compiler)
+    exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
+    
+    print("\n\n######## Executable #########")
+    print(exe)
+    path = os.path.join(os.getcwd(), "tests", "tests_compiler", "test_1v2_output.elf")
+
+    with open(path, "wb+") as fp:
+        fp.write(exe.binary())
+    # Running it primarily to check no exceptions thrown
+    #assert 0 == 1
+
+
 def test_basic_compiler_operation():
     src = ""
     src += "DATA\n"

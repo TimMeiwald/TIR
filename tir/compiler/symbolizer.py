@@ -42,8 +42,10 @@ class DataSegment():
         for symbol in self.symbols:
             size = symbol.size*symbol.quantity
             value = symbol.value
+            print("VALUE IN BINARY", value)
             if(value != None):
                 bin += Binary(value, size, size)
+        print(f"BINARY {bin}")
         return bin
 
     def __repr__(self):
@@ -55,19 +57,19 @@ class DataSegment():
         return string 
 
     def shift_memory_addresses(self, shift_size: int):
-        self.start_position += shift_size
-        self.end_position += shift_size
+        self.start_position += shift_size + 0x400000
+        self.end_position += shift_size + 0x400000
         for entry in self.symbols:
-            entry.address += shift_size
+            entry.address += shift_size + 0x400000
         
 
 class SymbolTable():
 
 
     def __init__(self):
-        self.BSS = DataSegment(6) # 6 -RW -> Is for Data initialised at runtime
-        self.DATA = DataSegment(6) # 6 -RW -> For Data stored at compile time
-        self.RODATA = DataSegment(4) # 4 -R- 
+        self.BSS = DataSegment(7) # 6 -RW -> Is for Data initialised at runtime
+        self.DATA = DataSegment(7) # 6 -RW -> For Data stored at compile time
+        self.RODATA = DataSegment(7) # 4 -R- 
         self.entry_point = None
 
     def get_symbol(self, symbol_name: str):
@@ -96,7 +98,7 @@ class SymbolTable():
             shift = size_bytes + page_count*page_size
             page_count += size_pages
             segment.shift_memory_addresses(shift)
-        self.entry_point = (page_count+1)*page_size
+        self.entry_point = (page_count+1)*page_size + 0x400000
 
 
     def symbolize(self, AST):

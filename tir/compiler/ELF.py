@@ -77,7 +77,7 @@ class ELF_x86_64(AbstractELFClass):
         
     def add_segments(self, TEXT: InstructionSegment, BSS: DataSegment, DATA: DataSegment, RODATA: DataSegment):
         # Order: DATA, RODATA, BSS, TEXT
-        running_total_size = 64+4*56 # One ELF Header and 4 Prog Headers
+        running_total_size = 64+4*56 # One ELF Header and 4 Prog Headers 
         page_size = 4096 
         # Handle DATA
         # Raw Binary 
@@ -142,6 +142,6 @@ class ELF_x86_64(AbstractELFClass):
         self.program_headers.append(TEXT_program_header)
         print(f"Added TEXT: {offset, type, vaddress, paddr, flags, filesz, memsz, align}")
         running_total_size += filesz
-        self.e_entry = h.e_entry(TEXT.start_position + paddr,EI_CLASS=self.EI_CLASS)
+        self.e_entry = h.e_entry(vaddress,EI_CLASS=self.EI_CLASS)
     
 
