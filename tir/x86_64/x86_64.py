@@ -15,8 +15,9 @@ def modrm(mod: int, r: int, m: int):
     m = m*2**3
     return mod+r+m
 
-def add_register_one_with_register_two(reg1: int, reg2: int):
-    prefix = Binary(1, 1, 1)
+def signed_multiply_register_one_with_register_two(reg1: int, reg2: int):
+    opcode = Binary(0x0f, 1, 1)
+    opcode += Binary(0xaf, 1, 1)
     upper_64_prefix = Binary(0, 0, 0)
     if(reg1 >= 8):
         upper_64_prefix = Binary(0x41, 1, 1)
@@ -28,7 +29,37 @@ def add_register_one_with_register_two(reg1: int, reg2: int):
         upper_64_prefix = Binary(0x45, 1, 1)
     register_pair = modrm(3, reg1, reg2)
     register_pair = Binary(register_pair, 1, 1)
-    return upper_64_prefix + prefix + register_pair
+    return upper_64_prefix + opcode + register_pair
+
+def subtract_register_one_with_register_two(reg1: int, reg2: int):
+    opcode = Binary(0x29, 1, 1)
+    upper_64_prefix = Binary(0, 0, 0)
+    if(reg1 >= 8):
+        upper_64_prefix = Binary(0x41, 1, 1)
+        reg1 -= 8
+    if(reg2 >= 8):
+        upper_64_prefix = Binary(0x44, 1, 1)
+        reg2 -= 8
+    if(reg1 >= 8 and reg2 >= 8):
+        upper_64_prefix = Binary(0x45, 1, 1)
+    register_pair = modrm(3, reg1, reg2)
+    register_pair = Binary(register_pair, 1, 1)
+    return upper_64_prefix + opcode + register_pair
+
+def add_register_one_with_register_two(reg1: int, reg2: int):
+    opcode = Binary(1, 1, 1)
+    upper_64_prefix = Binary(0, 0, 0)
+    if(reg1 >= 8):
+        upper_64_prefix = Binary(0x41, 1, 1)
+        reg1 -= 8
+    if(reg2 >= 8):
+        upper_64_prefix = Binary(0x44, 1, 1)
+        reg2 -= 8
+    if(reg1 >= 8 and reg2 >= 8):
+        upper_64_prefix = Binary(0x45, 1, 1)
+    register_pair = modrm(3, reg1, reg2)
+    register_pair = Binary(register_pair, 1, 1)
+    return upper_64_prefix + opcode + register_pair
 
 
 def load_const_to_register_displacement_only_32_bit(register: int, constant):
@@ -69,7 +100,7 @@ def load_register_value_to_memory_address_only_32_bit(register: int, address):
 if __name__ == "__main__":
     for reg1 in range(0, 16):
         for reg2 in range(0, 16):
-            l = add_register_one_with_register_two(reg1, reg2)
+            l = signed_multiply_register_one_with_register_two(reg1, reg2)
             print(l)
     
 

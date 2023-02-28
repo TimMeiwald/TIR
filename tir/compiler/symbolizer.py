@@ -67,9 +67,9 @@ class SymbolTable():
 
 
     def __init__(self):
-        self.BSS = DataSegment(7) # 6 -RW -> Is for Data initialised at runtime
-        self.DATA = DataSegment(7) # 6 -RW -> For Data stored at compile time
-        self.RODATA = DataSegment(7) # 4 -R- 
+        self.BSS = DataSegment(6) # 6 -RW -> Is for Data initialised at runtime
+        self.DATA = DataSegment(6) # 6 -RW -> For Data stored at compile time
+        self.RODATA = DataSegment(4) # 4 -R- 
         self.entry_point = None
 
     def get_symbol(self, symbol_name: str):
@@ -94,7 +94,6 @@ class SymbolTable():
         poffset = 64+56*4
         for segment in data_segments:
             size_bytes = segment.end_position - segment.start_position
-
             size_pages = ((size_bytes//page_size)+1)
             size_bytes_page = size_pages*page_size # 1 Page larger than integer div
             shift = size_bytes_page + page_count*page_size + 0x400000 + poffset
@@ -166,6 +165,8 @@ class SymbolTable():
     def memory_allocator(self, memory_alloc_node):
         type = memory_alloc_node.children[0].type
         size = int(memory_alloc_node.children[1].content)
+        if(size%8 != 0):
+            raise Exception("Bit size of a value must be a power of 2")
         size = size//8 # To convert to bytes
         try:
             quantity = int(memory_alloc_node.children[2].content)

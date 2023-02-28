@@ -69,6 +69,8 @@ class Compiler():
         if(action_node.type == Rules.function_call):
             self.function_call(variable_name, action_node)
             return
+        if(action_node.type == Rules.subtract):
+            self.subtract(variable_name, action_node)
         else:
             raise Exception(f"Node of type {text_statement_node.children[1].type.name} has not been implemented yet.")
 
@@ -121,6 +123,44 @@ class Compiler():
             self.TEXT.push_instr(asm.load_memory_value_to_register_displacement_only_32_bit(0, int(RHS.content)), comment)
             self.load_symbol("EDI", LHS.content)
             self.TEXT.push_instr(asm.add_register_one_with_register_two(0, 1), "add EAX, EDI")
+            self.load_to_symbol("EAX", destination)
+            return
+        else:
+            raise NotImplementedError
+        
+    def subtract(self, destination, sub_node):
+        LHS = sub_node.children[0]
+        RHS = sub_node.children[1]
+        if(LHS.type == Rules.variable and RHS.type == Rules.variable):
+            p1, s1 = self.symbol_table.get_symbol(LHS.content)
+            p2, s2 = self.symbol_table.get_symbol(RHS.content)
+            if(s1.type == Rules.int_identifier and s2.type == Rules.int_identifier):
+                self.load_symbol("EAX", LHS.content)
+                self.load_symbol("EDI", RHS.content)
+                self.TEXT.push_instr(asm.subtract_register_one_with_register_two(0, 7), "sub EAX, EDI")
+                self.load_to_symbol("EAX", destination)
+                return
+            else:
+                raise NotImplementedError
+        if(LHS.type == Rules.int and RHS.type == Rules.int):
+            # Since both int immediates can be summed at compile time
+            comment = f"mov EAX, {int(LHS.content) - int(RHS.content)}"
+            const = int(LHS.content) - int(RHS.content)
+            self.TEXT.push_instr(asm.load_const_to_register_displacement_only_32_bit(0, const), comment)
+            self.load_to_symbol("EAX", destination)
+            return
+        if(LHS.type == Rules.int and RHS.type == Rules.variable):
+            comment = f"mov EAX, {int(LHS.content)}"
+            self.TEXT.push_instr(asm.load_memory_value_to_register_displacement_only_32_bit(0, int(LHS.content)), comment)
+            self.load_symbol("EDI", RHS.content)
+            self.TEXT.push_instr(asm.subtract_register_one_with_register_two(0, 1), "sub EAX, EDI")
+            self.load_to_symbol("EAX", destination)
+            return
+        if(RHS.type == Rules.int and LHS.type == Rules.variable):
+            comment = f"mov EAX, {int(RHS.content)}"
+            self.TEXT.push_instr(asm.load_memory_value_to_register_displacement_only_32_bit(0, int(RHS.content)), comment)
+            self.load_symbol("EDI", LHS.content)
+            self.TEXT.push_instr(asm.subtract_register_one_with_register_two(0, 1), "sub EAX, EDI")
             self.load_to_symbol("EAX", destination)
             return
         else:
