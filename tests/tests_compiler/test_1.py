@@ -3,7 +3,22 @@ from tir.compiler.symbolizer import SymbolTable
 from tir.compiler.compiler import Compiler
 from tir.compiler.assembler import Assembler, Architecture
 import os as os
+import subprocess
 
+def writeout_executable(func):
+    """Provided a test returns the Binary executable then it'll be written out 
+    to a file in the test output folder named after the test name"""
+    name = func.__name__
+    def kernel(*args, **kwargs):
+        exe = func(*args, **kwargs)
+        path = os.path.join(os.getcwd(), "tests", "tests_compiler", "test_output", f"{name}.elf")
+        with open(path, "wb+") as fp:
+            fp.write(exe.binary())
+        return 
+    return kernel()
+
+
+@writeout_executable
 def test_very_basic_compiler_operation():
     src = ""
     src += "TEXT\n"
@@ -19,13 +34,9 @@ def test_very_basic_compiler_operation():
     exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
     print("\n\n######## Executable #########")
     print(exe)
-    path = os.path.join(os.getcwd(), "tests", "tests_compiler", "test_1v_output.elf")
+    return exe
 
-    with open(path, "wb+") as fp:
-        fp.write(exe.binary())
-    # Running it primarily to check no exceptions thrown
-    #assert 0 == 1
-
+@writeout_executable
 def test_very_basic_compiler_operation2():
     src = ""
     src += "DATA\n"
@@ -44,17 +55,9 @@ def test_very_basic_compiler_operation2():
     compiler = Compiler(sym_table, text_node)
     print(compiler)
     exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
-    
-    print("\n\n######## Executable #########")
-    print(exe)
-    path = os.path.join(os.getcwd(), "tests", "tests_compiler", "test_1v2_output.elf")
+    return exe
 
-    with open(path, "wb+") as fp:
-        fp.write(exe.binary())
-    # Running it primarily to check no exceptions thrown
-    #assert 0 == 1
-
-
+@writeout_executable
 def test_basic_compiler_operation():
     src = ""
     src += "DATA\n"
@@ -78,16 +81,9 @@ def test_basic_compiler_operation():
     compiler = Compiler(sym_table, text_node)
     print(compiler)
     exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
-    print("\n\n######## Executable #########")
-    print(exe)
-    path = os.path.join(os.getcwd(), "tests", "tests_compiler", "test_1_output.elf")
+    return exe
 
-    with open(path, "wb+") as fp:
-        fp.write(exe.binary())
-    # Running it primarily to check no exceptions thrown
-
-
-
+@writeout_executable
 def test_basic_add():
     src = ""
     src += "DATA\n"
@@ -111,17 +107,9 @@ def test_basic_add():
     compiler = Compiler(sym_table, text_node)
     print(compiler)
     exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
-    print("\n\n######## Executable #########")
-    print(exe)
-    path = os.path.join(os.getcwd(), "tests", "tests_compiler", "test_basic_add.elf")
+    return exe
 
-    with open(path, "wb+") as fp:
-        fp.write(exe.binary())
-    # Running it primarily to check no exceptions thrown
-
-
-
-
+@writeout_executable
 def test_basic_sub():
     src = ""
     src += "DATA\n"
@@ -145,10 +133,4 @@ def test_basic_sub():
     compiler = Compiler(sym_table, text_node)
     print(compiler)
     exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
-    print("\n\n######## Executable #########")
-    print(exe)
-    path = os.path.join(os.getcwd(), "tests", "tests_compiler", "test_basic_sub.elf")
-
-    with open(path, "wb+") as fp:
-        fp.write(exe.binary())
-    # Running it primarily to check no exceptions thrown
+    return exe
