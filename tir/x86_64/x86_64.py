@@ -3,12 +3,12 @@ from elfgenerator.Binary import Binary
 from enum import IntEnum
 from tir.x86_64.utils import modrm, syscall
 
-
+"""All the following classes and static methods should return a Binary object and a String"""
 class Int32():
     """All operations that work with 32 bit Integers"""
 
     @staticmethod
-    def signed_multiply_register_one_with_register_two(reg1: int, reg2: int):
+    def signed_multiply_register_one_with_register_two(reg1: int, reg2: int) -> tuple(Binary, str):
         opcode = Binary(0x0f, 1, 1)
         opcode += Binary(0xaf, 1, 1)
         upper_64_prefix = Binary(0, 0, 0)
@@ -25,7 +25,7 @@ class Int32():
         return upper_64_prefix + opcode + register_pair
     
     @staticmethod
-    def subtract_register_one_with_register_two(reg1: int, reg2: int):
+    def subtract_register_one_with_register_two(reg1: int, reg2: int) -> tuple(Binary, str):
         opcode = Binary(0x29, 1, 1)
         upper_64_prefix = Binary(0, 0, 0)
         if(reg1 >= 8):
@@ -41,7 +41,7 @@ class Int32():
         return upper_64_prefix + opcode + register_pair
     
     @staticmethod
-    def add_register_one_with_register_two(reg1: int, reg2: int):
+    def add_register_one_with_register_two(reg1: int, reg2: int) -> tuple(Binary, str):
         opcode = Binary(1, 1, 1)
         upper_64_prefix = Binary(0, 0, 0)
         if(reg1 >= 8):
@@ -59,7 +59,7 @@ class Int32():
 
 
     @staticmethod
-    def load_const_to_register_displacement_only(register: int, constant):
+    def load_const_to_register_displacement_only(register: int, constant) -> tuple(Binary, str):
         binary = Binary(0,0,0)
         if(register >= 8):
             binary = Binary(0x41, 1, 1)
@@ -68,7 +68,7 @@ class Int32():
         return binary
 
     @staticmethod
-    def load_memory_value_to_register_displacement_only(register: int, address):
+    def load_memory_value_to_register_displacement_only(register: int, address) -> tuple(Binary, str):
         if(register >= 8):
             pre_prefix = Binary(0x44, 1, 1)
             register -= 8
@@ -82,7 +82,7 @@ class Int32():
         return pre_prefix + prefix + register + suffix + address 
 
     @staticmethod
-    def load_register_value_to_memory_address_displacement_only(register: int, address):
+    def load_register_value_to_memory_address_displacement_only(register: int, address) -> tuple(Binary, str):
         if(register >= 8):
             pre_prefix = Binary(0x44, 1, 1)
             register -= 8

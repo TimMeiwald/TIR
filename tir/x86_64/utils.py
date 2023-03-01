@@ -90,8 +90,11 @@ def bits_validator(func):
         return func(*args, **kwargs)
     return kernel
 
-def _binary_op_string_adder(op: str, reg1: str, reg2: str):
-    return op + " " + reg1 + ", " + reg2
+def _binary_op_string_adder(op: str, str1: str, str2: str):
+    return op + " " + str1 + ", " + str2
+
+def _unary_op_string_adder(op: str , str1: str):
+    return op + " " + str1
 
 @bits_validator
 def binary_instruction_rr(asm_instruction: str, reg_1: int, reg_2: int, bits: int):
@@ -103,9 +106,9 @@ def binary_instruction_rr(asm_instruction: str, reg_1: int, reg_2: int, bits: in
 @bits_validator
 def unary_instruction_r(asm_instruction: str, reg: int, bits: int):
     if(bits == 32):
-        return asm_instruction + " " + Registers_32(reg).name 
+        return _unary_op_string_adder(asm_instruction, Registers_32(reg).name)
     elif(bits == 64):
-        return asm_instruction + " " + Registers_64(reg).name 
+        return _unary_op_string_adder(asm_instruction, Registers_64(reg).name)
 
 @bits_validator
 def binary_instruction_cr(asm_instruction: str, reg_1: int, const: int, bits: int):
@@ -114,7 +117,6 @@ def binary_instruction_cr(asm_instruction: str, reg_1: int, const: int, bits: in
     elif(bits == 64):
         return _binary_op_string_adder(asm_instruction, Registers_64(reg_1).name, const)
 
-#Still need to do this
 @bits_validator
 def binary_instruction_mr(asm_instruction: str, value_to_memory: int, reg: int, bits: int):
     if(bits == 32):
