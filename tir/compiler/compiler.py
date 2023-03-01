@@ -13,7 +13,9 @@ class InstructionSegment():
         self.end_position = 0
         self.set_entry_point(entry_point)
 
-    def push_instr(self, instr: Binary, comment: str = ""):
+    def push_instr(self, binary_and_text: tuple[Binary, str]):
+        instr = binary_and_text[0]
+        comment = binary_and_text[1]
         self.end_position += instr.size
         self.instr_stack.append(instr)
         self.comment_stack.append(comment)
@@ -80,14 +82,15 @@ class Compiler():
         registers = {"EAX": 0, "EDI": 7, "ECX": 1}
         comment = f"mov {target_register}, [{symbol_entry.address}]"
         target_register = registers[target_register]
-        self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(target_register, symbol_entry.address), comment)
+        print(target_register, symbol_entry.address)
+        self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(target_register, symbol_entry.address))
     
     def load_to_symbol(self, source_register, symbol_name):
         permissions, symbol_entry = self.symbol_table.get_symbol(symbol_name)
         comment = f"mov [{symbol_entry.address}], {source_register}"
         registers = {"EAX": 0, "EDI": 7, "ECX": 1}
         source_register = registers[source_register]
-        self.TEXT.push_instr(asm.Int32.load_register_value_to_memory_address_displacement_only(source_register, symbol_entry.address), comment)
+        self.TEXT.push_instr(asm.Int32.load_register_value_to_memory_address_displacement_only(source_register, symbol_entry.address))
 
     def add(self, destination, add_node):
         LHS = add_node.children[0]
@@ -98,7 +101,7 @@ class Compiler():
             if(s1.type == Rules.int_identifier and s2.type == Rules.int_identifier):
                 self.load_symbol("EAX", LHS.content)
                 self.load_symbol("EDI", RHS.content)
-                self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 7), "add EAX, EDI")
+                self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 7))
                 self.load_to_symbol("EAX", destination)
                 return
             else:
@@ -108,21 +111,21 @@ class Compiler():
             comment = f"mov EAX, {int(LHS.content) + int(RHS.content)}"
             const = int(LHS.content) + int(RHS.content)
             print("40 + 20 is :", const)
-            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, const), comment)
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, const))
             self.load_to_symbol("EAX", destination)
             return
         if(LHS.type == Rules.int and RHS.type == Rules.variable):
             comment = f"mov EAX, {int(LHS.content)}"
             self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only_32_bit(0, int(LHS.content)), comment)
             self.load_symbol("EDI", RHS.content)
-            self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 1), "add EAX, EDI")
+            self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 1))
             self.load_to_symbol("EAX", destination)
             return
         if(RHS.type == Rules.int and LHS.type == Rules.variable):
             comment = f"mov EAX, {int(RHS.content)}"
             self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only_32_bit(0, int(RHS.content)), comment)
             self.load_symbol("EDI", LHS.content)
-            self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 1), "add EAX, EDI")
+            self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 1))
             self.load_to_symbol("EAX", destination)
             return
         else:
@@ -137,7 +140,7 @@ class Compiler():
             if(s1.type == Rules.int_identifier and s2.type == Rules.int_identifier):
                 self.load_symbol("EAX", LHS.content)
                 self.load_symbol("EDI", RHS.content)
-                self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 7), "sub EAX, EDI")
+                self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 7))
                 self.load_to_symbol("EAX", destination)
                 return
             else:
@@ -153,14 +156,14 @@ class Compiler():
             comment = f"mov EAX, {int(LHS.content)}"
             self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(0, int(LHS.content)), comment)
             self.load_symbol("EDI", RHS.content)
-            self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 1), "sub EAX, EDI")
+            self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 1))
             self.load_to_symbol("EAX", destination)
             return
         if(RHS.type == Rules.int and LHS.type == Rules.variable):
             comment = f"mov EAX, {int(RHS.content)}"
             self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(0, int(RHS.content)), comment)
             self.load_symbol("EDI", LHS.content)
-            self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 1), "sub EAX, EDI")
+            self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 1))
             self.load_to_symbol("EAX", destination)
             return
         else:
@@ -175,12 +178,12 @@ class Compiler():
             if(index == 0):
                 continue
             if(argument.type == Rules.int):
-                self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(syscall_regs_as_int[index-1], int(argument.content)), f"load immediate: {argument.content} to register: {syscall_regs[index-1]}")
+                self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(syscall_regs_as_int[index-1], int(argument.content)))
             elif(argument.type == Rules.variable):
                 self.load_symbol(syscall_regs[index-1], argument.content)
 
             else:
                 raise NotImplementedError
-        self.TEXT.push_instr(asm.syscall(), "syscall")
+        self.TEXT.push_instr(asm.syscall())
 
 

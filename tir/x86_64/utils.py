@@ -12,7 +12,7 @@ def modrm(mod: int, r: int, m: int):
     return mod+r+m
 
 def syscall():
-    return Binary(0x050F, 2, 2)
+    return Binary(0x050F, 2, 2), "syscall"
 
 class Registers_Syscall_Linux_32(IntEnum):
     """
@@ -113,9 +113,9 @@ def unary_instruction_r(asm_instruction: str, reg: int, bits: int):
 @bits_validator
 def binary_instruction_cr(asm_instruction: str, reg_1: int, const: int, bits: int):
     if(bits == 32):
-        return _binary_op_string_adder(asm_instruction, Registers_32(reg_1).name, const)
+        return _binary_op_string_adder(asm_instruction, Registers_32(reg_1).name, str(const))
     elif(bits == 64):
-        return _binary_op_string_adder(asm_instruction, Registers_64(reg_1).name, const)
+        return _binary_op_string_adder(asm_instruction, Registers_64(reg_1).name, str(const))
 
 @bits_validator
 def binary_instruction_mr(asm_instruction: str, value_to_memory: int, reg: int, bits: int):
