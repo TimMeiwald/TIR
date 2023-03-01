@@ -80,14 +80,11 @@ class Compiler():
     def load_symbol(self, target_register, symbol_name):
         permissions, symbol_entry = self.symbol_table.get_symbol(symbol_name)
         registers = {"EAX": 0, "EDI": 7, "ECX": 1}
-        comment = f"mov {target_register}, [{symbol_entry.address}]"
         target_register = registers[target_register]
-        print(target_register, symbol_entry.address)
         self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(target_register, symbol_entry.address))
     
     def load_to_symbol(self, source_register, symbol_name):
         permissions, symbol_entry = self.symbol_table.get_symbol(symbol_name)
-        comment = f"mov [{symbol_entry.address}], {source_register}"
         registers = {"EAX": 0, "EDI": 7, "ECX": 1}
         source_register = registers[source_register]
         self.TEXT.push_instr(asm.Int32.load_register_value_to_memory_address_displacement_only(source_register, symbol_entry.address))
@@ -108,22 +105,18 @@ class Compiler():
                 raise NotImplementedError
         if(LHS.type == Rules.int and RHS.type == Rules.int):
             # Since both int immediates can be summed at compile time
-            comment = f"mov EAX, {int(LHS.content) + int(RHS.content)}"
             const = int(LHS.content) + int(RHS.content)
-            print("40 + 20 is :", const)
             self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, const))
             self.load_to_symbol("EAX", destination)
             return
         if(LHS.type == Rules.int and RHS.type == Rules.variable):
-            comment = f"mov EAX, {int(LHS.content)}"
-            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only_32_bit(0, int(LHS.content)), comment)
+            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only_32_bit(0, int(LHS.content)))
             self.load_symbol("EDI", RHS.content)
             self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 1))
             self.load_to_symbol("EAX", destination)
             return
         if(RHS.type == Rules.int and LHS.type == Rules.variable):
-            comment = f"mov EAX, {int(RHS.content)}"
-            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only_32_bit(0, int(RHS.content)), comment)
+            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only_32_bit(0, int(RHS.content)))
             self.load_symbol("EDI", LHS.content)
             self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 1))
             self.load_to_symbol("EAX", destination)
@@ -147,21 +140,18 @@ class Compiler():
                 raise NotImplementedError
         if(LHS.type == Rules.int and RHS.type == Rules.int):
             # Since both int immediates can be summed at compile time
-            comment = f"mov EAX, {int(LHS.content) - int(RHS.content)}"
             const = int(LHS.content) - int(RHS.content)
-            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, const), comment)
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, const))
             self.load_to_symbol("EAX", destination)
             return
         if(LHS.type == Rules.int and RHS.type == Rules.variable):
-            comment = f"mov EAX, {int(LHS.content)}"
-            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(0, int(LHS.content)), comment)
+            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(0, int(LHS.content)))
             self.load_symbol("EDI", RHS.content)
             self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 1))
             self.load_to_symbol("EAX", destination)
             return
         if(RHS.type == Rules.int and LHS.type == Rules.variable):
-            comment = f"mov EAX, {int(RHS.content)}"
-            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(0, int(RHS.content)), comment)
+            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(0, int(RHS.content)))
             self.load_symbol("EDI", LHS.content)
             self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 1))
             self.load_to_symbol("EAX", destination)
@@ -181,7 +171,6 @@ class Compiler():
                 self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(syscall_regs_as_int[index-1], int(argument.content)))
             elif(argument.type == Rules.variable):
                 self.load_symbol(syscall_regs[index-1], argument.content)
-
             else:
                 raise NotImplementedError
         self.TEXT.push_instr(asm.syscall())
