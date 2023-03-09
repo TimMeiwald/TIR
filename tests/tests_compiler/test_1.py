@@ -156,6 +156,32 @@ def test_basic_add():
 
 @run_wsl_code
 @writeout_executable
+def test_basic_add_one_side_var():
+    src = ""
+    src += "DATA\n"
+    src += "x = int_32 is 40\n"
+    src += "RODATA\n"
+    src += "y1 = int_32 is 22\n"
+    src += "y2 = int_32 is 20\n"
+    src += "BSS\n"
+    src += "z = int_32\n"
+    src += "TEXT\n"
+    src += "z = 22 + y2\n"
+    src += "x = 40 + 20\n"
+    src += "z = syscall(x, z)\n"
+    src += "\n"
+    parser = Grammar_Parser()
+    resultant_position, bool, node = parser.parse(src, parser.grammar)
+    sym_table = SymbolTable()
+    text_node = sym_table.symbolize(node)
+    print(sym_table)
+    compiler = Compiler(sym_table, text_node)
+    print(compiler)
+    exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
+    return exe, 42
+
+@run_wsl_code
+@writeout_executable
 def test_basic_sub():
     src = ""
     src += "DATA\n"
@@ -192,11 +218,13 @@ def test_basic_signed_mul():
     src += "y1 = int_32 is 22\n"
     src += "y2 = int_32[4] is 20\n"
     src += "y3 = int_32 is 10\n"
+    src += "y4 = int_32 is 4\n"
+    src += "y5 = int_32 is 6\n"
     src += "BSS\n"
     src += "z = int_32\n"
     src += "TEXT\n"
-    src += "z = y1 - y2\n"
-    src += "x = 40*20\n"
+    src += "z = y4 * y5\n"
+    src += "x = 40+20\n"
     src += "z = syscall(x, z)\n"
     src += "\n"
     parser = Grammar_Parser()
@@ -207,4 +235,57 @@ def test_basic_signed_mul():
     compiler = Compiler(sym_table, text_node)
     print(compiler)
     exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
-    return exe
+    return exe, 24
+
+@run_wsl_code
+@writeout_executable
+def test_basic_unsigned_div():
+    src = ""
+    src += "DATA\n"
+    src += "x = int_32 is 40\n"
+    src += "RODATA\n"
+    src += "y4 = int_32 is 30\n"
+    src += "y5 = int_32 is 2\n"
+    src += "BSS\n"
+    src += "z = int_32\n"
+    src += "TEXT\n"
+    src += "z = y4 / y5\n"
+    src += "x = x+20\n"
+    src += "z = syscall(x, z)\n"
+    src += "\n"
+    parser = Grammar_Parser()
+    resultant_position, bool, node = parser.parse(src, parser.grammar)
+    sym_table = SymbolTable()
+    text_node = sym_table.symbolize(node)
+    print(sym_table)
+    compiler = Compiler(sym_table, text_node)
+    print(compiler)
+    exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
+    return exe, 15
+
+
+@run_wsl_code
+@writeout_executable
+def test_basic_unsigned_div():
+    src = ""
+    src += "DATA\n"
+    src += "x = int_32 is 40\n"
+    src += "RODATA\n"
+    src += "y4 = int_32 is 30\n"
+    src += "y5 = int_32 is 2\n"
+    src += "BSS\n"
+    src += "z = int_32\n"
+    src += "TEXT\n"
+    src += "z = 100 / y5\n"
+    src += "x = x+20\n"
+    src += "z = syscall(x, z)\n"
+    src += "\n"
+    parser = Grammar_Parser()
+    resultant_position, bool, node = parser.parse(src, parser.grammar)
+    sym_table = SymbolTable()
+    text_node = sym_table.symbolize(node)
+    print(sym_table)
+    compiler = Compiler(sym_table, text_node)
+    print(compiler)
+    exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
+    return exe, 50

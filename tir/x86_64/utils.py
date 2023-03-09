@@ -7,6 +7,10 @@ def modrm(mod: int, r: int, m: int):
     r changes row
     m changes column
     Not sure which way it's meant to be as long as you're consistent works."""
+    if(r>7):
+        r-=8
+    if(m>7):
+        m-=8
     mod = mod*2**6
     m = m*2**3
     return mod+r+m
@@ -131,3 +135,11 @@ def binary_instruction_rm(asm_instruction: str, reg: int, memory_address: int, b
     elif(bits == 64):
         return _binary_op_string_adder(asm_instruction, f"[{memory_address}]", Registers_64(reg).name)
 
+@bits_validator
+def unary_instruction_imm(asm_instruction: str, const: int, bits: int):
+    return _unary_op_string_adder(asm_instruction, str(hex(const)))
+
+
+@bits_validator
+def unary_instruction_m(asm_instruction: str, memory_address: int, bits: int):
+    return _unary_op_string_adder(asm_instruction, f"[{hex(memory_address)}]")

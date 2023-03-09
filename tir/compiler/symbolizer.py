@@ -42,10 +42,8 @@ class DataSegment():
         for symbol in self.symbols:
             size = symbol.size*symbol.quantity
             value = symbol.value
-            print("VALUE IN BINARY", value)
             if(value != None):
                 bin += Binary(value, size, size)
-        print(f"BINARY {bin}")
         return bin
 
     def __repr__(self):

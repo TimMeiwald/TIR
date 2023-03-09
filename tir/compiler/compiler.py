@@ -27,10 +27,13 @@ class InstructionSegment():
     def __repr__(self):
         response = ""
         padding = 40
+        total_instr = Binary(0,0,0)
         for index, i in enumerate(self.instr_stack):
             instr = i.__repr__()
+            total_instr += i
             comment = self.comment_stack[index]
             response += instr + (padding-len(instr))*" " + "; "+ comment + "\n"
+        response += "\n" + "Whole Binary: " + total_instr.__repr__() + "\n"
         return response
     
     def get_binary(self):
@@ -68,11 +71,15 @@ class Compiler():
         if(action_node.type == Rules.add):
             self.add(variable_name, action_node)
             return
-        if(action_node.type == Rules.function_call):
+        elif(action_node.type == Rules.function_call):
             self.function_call(variable_name, action_node)
             return
-        if(action_node.type == Rules.subtract):
+        elif(action_node.type == Rules.subtract):
             self.subtract(variable_name, action_node)
+        elif(action_node.type == Rules.multiplication):
+            self.imultiply(variable_name, action_node)
+        elif(action_node.type == Rules.division):
+            self.udiv(variable_name, action_node)
         else:
             raise Exception(f"Node of type {text_statement_node.children[1].type.name} has not been implemented yet.")
 
@@ -110,15 +117,15 @@ class Compiler():
             self.load_to_symbol("EAX", destination)
             return
         if(LHS.type == Rules.int and RHS.type == Rules.variable):
-            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only_32_bit(0, int(LHS.content)))
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, int(LHS.content)))
             self.load_symbol("EDI", RHS.content)
-            self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 1))
+            self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 7))
             self.load_to_symbol("EAX", destination)
             return
-        if(RHS.type == Rules.int and LHS.type == Rules.variable):
-            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only_32_bit(0, int(RHS.content)))
+        if(LHS.type == Rules.variable and RHS.type == Rules.int):
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, int(RHS.content)))
             self.load_symbol("EDI", LHS.content)
-            self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 1))
+            self.TEXT.push_instr(asm.Int32.add_register_one_with_register_two(0, 7))
             self.load_to_symbol("EAX", destination)
             return
         else:
@@ -145,15 +152,87 @@ class Compiler():
             self.load_to_symbol("EAX", destination)
             return
         if(LHS.type == Rules.int and RHS.type == Rules.variable):
-            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(0, int(LHS.content)))
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, int(LHS.content)))
             self.load_symbol("EDI", RHS.content)
             self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 1))
             self.load_to_symbol("EAX", destination)
             return
         if(RHS.type == Rules.int and LHS.type == Rules.variable):
-            self.TEXT.push_instr(asm.Int32.load_memory_value_to_register_displacement_only(0, int(RHS.content)))
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, int(RHS.content)))
             self.load_symbol("EDI", LHS.content)
             self.TEXT.push_instr(asm.Int32.subtract_register_one_with_register_two(0, 1))
+            self.load_to_symbol("EAX", destination)
+            return
+        else:
+            raise NotImplementedError
+
+    def imultiply(self, destination, imul_node):
+        LHS = imul_node.children[0]
+        RHS = imul_node.children[1]
+        if(LHS.type == Rules.variable and RHS.type == Rules.variable):
+            p1, s1 = self.symbol_table.get_symbol(LHS.content)
+            p2, s2 = self.symbol_table.get_symbol(RHS.content)
+            if(s1.type == Rules.int_identifier and s2.type == Rules.int_identifier):
+                self.load_symbol("EAX", LHS.content)
+                self.load_symbol("EDI", RHS.content)
+                self.TEXT.push_instr(asm.Int32.signed_multiply_register_one_with_register_two(0,7))
+                self.load_to_symbol("EAX", destination)
+                return
+            else:
+                raise NotImplementedError
+        if(LHS.type == Rules.int and RHS.type == Rules.int):
+            # Since both int immediates can be summed at compile time
+            const = int(LHS.content)*int(RHS.content)
+            print("CONST IS ", const)
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, const))
+            self.load_to_symbol("EAX", destination)
+            return
+        if(LHS.type == Rules.int and RHS.type == Rules.variable):
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, int(LHS.content)))
+            self.load_symbol("EDI", RHS.content)
+            self.TEXT.push_instr(asm.Int32.signed_multiply_register_one_with_register_two(0, 1))
+            self.load_to_symbol("EAX", destination)
+            return
+        if(RHS.type == Rules.int and LHS.type == Rules.variable):
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, int(RHS.content)))
+            self.load_symbol("EDI", LHS.content)
+            self.TEXT.push_instr(asm.Int32.signed_multiply_register_one_with_register_two(0, 1))
+            self.load_to_symbol("EAX", destination)
+            return
+        else:
+            raise NotImplementedError
+    
+    def udiv(self, destination, div_node):
+        LHS = div_node.children[0]
+        RHS = div_node.children[1]
+        if(LHS.type == Rules.variable and RHS.type == Rules.variable):
+            p1, s1 = self.symbol_table.get_symbol(LHS.content)
+            p2, s2 = self.symbol_table.get_symbol(RHS.content)
+            if(s1.type == Rules.int_identifier and s2.type == Rules.int_identifier):
+                self.load_symbol("EAX", LHS.content)
+                self.load_symbol("EDI", RHS.content)
+                self.TEXT.push_instr(asm.Int32.udiv_register_one_with_register_two(7))
+                self.load_to_symbol("EAX", destination)
+                return
+            else:
+                raise NotImplementedError
+        if(LHS.type == Rules.int and RHS.type == Rules.int):
+            # Since both int immediates can be summed at compile time
+            const = int(LHS.content)//int(RHS.content)
+            print("CONST IS ", const)
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, const))
+            self.load_to_symbol("EAX", destination)
+            return
+        if(LHS.type == Rules.int and RHS.type == Rules.variable):
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, int(LHS.content)))
+            self.load_symbol("EDI", RHS.content)
+            self.TEXT.push_instr(asm.Int32.udiv_register_one_with_register_two(7))
+            self.load_to_symbol("EAX", destination)
+            return
+        if(RHS.type == Rules.int and LHS.type == Rules.variable):
+            self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_onlyy(7, int(RHS.content)))
+            self.load_symbol("EAX", LHS.content)
+            self.TEXT.push_instr(asm.Int32.udiv_register_one_with_register_two(7))
             self.load_to_symbol("EAX", destination)
             return
         else:
