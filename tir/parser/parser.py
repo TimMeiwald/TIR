@@ -47,26 +47,44 @@ class Rules(IntEnum):
     minus = 47
     forward_slash = 48
     star = 49
-    add = 50
-    subtract = 51
-    division = 52
-    multiplication = 53
-    maths = 54
-    function_call = 55
-    int = 56
-    data = 57
-    BSS_statement = 58
-    DATA_statement = 59
-    TEXT_statement = 60
-    RODATA_identifier = 61
-    DATA_identifier = 62
-    BSS_identifier = 63
-    TEXT_identifier = 64
-    RODATA = 65
-    DATA = 66
-    BSS = 67
-    TEXT = 68
-    grammar = 69
+    s_greater_than = 50
+    s_greater_than_or_equals = 51
+    s_less_than = 52
+    s_less_than_or_equals = 53
+    s_equals = 54
+    c_greater_than_or_equals = 55
+    c_greater_than = 56
+    c_less_than = 57
+    c_less_than_or_equals = 58
+    c_equals = 59
+    comparison_operator = 60
+    add = 61
+    subtract = 62
+    division = 63
+    multiplication = 64
+    maths = 65
+    function_call = 66
+    if_identifier = 67
+    else_identifier = 68
+    scope_open = 69
+    scope_close = 70
+    if_statement = 71
+    else_statement = 72
+    if_else_block = 73
+    int = 74
+    data = 75
+    BSS_statement = 76
+    DATA_statement = 77
+    TEXT_statement = 78
+    RODATA_identifier = 79
+    DATA_identifier = 80
+    BSS_identifier = 81
+    TEXT_identifier = 82
+    RODATA = 83
+    DATA = 84
+    BSS = 85
+    TEXT = 86
+    grammar = 87
 
 
 
@@ -359,8 +377,8 @@ class Parser():
 class Parser_Pass_Two():
 
     def __init__(self):
-        self.delete_nodes = (Rules.newline, Rules.space, Rules.whitespace, Rules.equals, Rules.underscore, Rules.open_square_bracket, Rules.close_square_bracket, Rules.open_bracket, Rules.close_bracket, Rules.Is, Rules.comma, Rules.line_terminator, Rules.plus, Rules.minus, Rules.forward_slash, Rules.star, Rules.RODATA_identifier, Rules.DATA_identifier, Rules.BSS_identifier, Rules.TEXT_identifier, )
-        self.passthrough_nodes = (Rules.Alphabet_Upper, Rules.Alphabet_Lower, Rules.Num, Rules.Spaces, Rules.Specials, Rules.ASCII, Rules.integer, Rules.type_identifier, Rules.maths, Rules.data, )
+        self.delete_nodes = (Rules.newline, Rules.space, Rules.whitespace, Rules.equals, Rules.underscore, Rules.open_square_bracket, Rules.close_square_bracket, Rules.open_bracket, Rules.close_bracket, Rules.Is, Rules.comma, Rules.line_terminator, Rules.plus, Rules.minus, Rules.forward_slash, Rules.star, Rules.s_greater_than, Rules.s_greater_than_or_equals, Rules.s_less_than, Rules.s_less_than_or_equals, Rules.s_equals, Rules.if_identifier, Rules.else_identifier, Rules.scope_open, Rules.scope_close, Rules.RODATA_identifier, Rules.DATA_identifier, Rules.BSS_identifier, Rules.TEXT_identifier, )
+        self.passthrough_nodes = (Rules.Alphabet_Upper, Rules.Alphabet_Lower, Rules.Num, Rules.Spaces, Rules.Specials, Rules.ASCII, Rules.integer, Rules.type_identifier, Rules.comparison_operator, Rules.maths, Rules.data, )
         self.collect_nodes = (Rules.variable, Rules.size, Rules.quantity, Rules.int_identifier, Rules.float_identifier, Rules.int, )
         # Anyone making modifications be aware everything after line 10 is
         # automatically added to
@@ -493,9 +511,9 @@ class Grammar_Parser(Parser):
     @cache
     def space(self, position: int, dummy = None):
         """
-        <space> = " " ;
+        <space> = " "+ ;
         """
-        return self._SUBEXPRESSION(position, (self._TERMINAL, " "))
+        return self._SUBEXPRESSION(position, (self._ONE_OR_MORE, (self._TERMINAL, " ")))
 
     @cache
     def whitespace(self, position: int, dummy = None):
@@ -652,6 +670,83 @@ class Grammar_Parser(Parser):
         return self._SUBEXPRESSION(position, (self._TERMINAL, "*"))
 
     @cache
+    def s_greater_than(self, position: int, dummy = None):
+        """
+        <s_greater_than> = ">" ;
+        """
+        return self._SUBEXPRESSION(position, (self._TERMINAL, ">"))
+
+    @cache
+    def s_greater_than_or_equals(self, position: int, dummy = None):
+        """
+        <s_greater_than_or_equals> = ">", "=" ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._TERMINAL, ">"), (self._TERMINAL, "="))))
+
+    @cache
+    def s_less_than(self, position: int, dummy = None):
+        """
+        <s_less_than> = "<" ;
+        """
+        return self._SUBEXPRESSION(position, (self._TERMINAL, "<"))
+
+    @cache
+    def s_less_than_or_equals(self, position: int, dummy = None):
+        """
+        <s_less_than_or_equals> = "<", "=" ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._TERMINAL, "<"), (self._TERMINAL, "="))))
+
+    @cache
+    def s_equals(self, position: int, dummy = None):
+        """
+        <s_equals> = "=", "=" ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._TERMINAL, "="), (self._TERMINAL, "="))))
+
+    @cache
+    def c_greater_than_or_equals(self, position: int, dummy = None):
+        """
+        <c_greater_than_or_equals> = (<variable>/<data>), <whitespace>, <s_greater_than_or_equals>, <whitespace>, (<variable>/<data>) ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))), (self._VAR_NAME, (self.whitespace, None)))), (self._VAR_NAME, (self.s_greater_than_or_equals, None)))), (self._VAR_NAME, (self.whitespace, None)))), (self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))))))
+
+    @cache
+    def c_greater_than(self, position: int, dummy = None):
+        """
+        <c_greater_than> = (<variable>/<data>), <whitespace>, <s_greater_than>, <whitespace>, (<variable>/<data>) ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))), (self._VAR_NAME, (self.whitespace, None)))), (self._VAR_NAME, (self.s_greater_than, None)))), (self._VAR_NAME, (self.whitespace, None)))), (self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))))))
+
+    @cache
+    def c_less_than(self, position: int, dummy = None):
+        """
+        <c_less_than> = (<variable>/<data>), <whitespace>, <s_less_than>, <whitespace>, (<variable>/<data>) ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))), (self._VAR_NAME, (self.whitespace, None)))), (self._VAR_NAME, (self.s_less_than, None)))), (self._VAR_NAME, (self.whitespace, None)))), (self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))))))
+
+    @cache
+    def c_less_than_or_equals(self, position: int, dummy = None):
+        """
+        <c_less_than_or_equals> = (<variable>/<data>), <whitespace>, <s_less_than_or_equals>, <whitespace>, (<variable>/<data>) ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))), (self._VAR_NAME, (self.whitespace, None)))), (self._VAR_NAME, (self.s_less_than_or_equals, None)))), (self._VAR_NAME, (self.whitespace, None)))), (self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))))))
+
+    @cache
+    def c_equals(self, position: int, dummy = None):
+        """
+        <c_equals> = (<variable>/<data>), <whitespace>, <s_equals>, <whitespace>, (<variable>/<data>) ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))), (self._VAR_NAME, (self.whitespace, None)))), (self._VAR_NAME, (self.s_equals, None)))), (self._VAR_NAME, (self.whitespace, None)))), (self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.data, None))))))))
+
+    @cache
+    def comparison_operator(self, position: int, dummy = None):
+        """
+        <comparison_operator> = <c_greater_than_or_equals>/<c_less_than_or_equals>/<c_greater_than>/<c_less_than>/<c_equals> ;
+        """
+        return self._SUBEXPRESSION(position, (self._ORDERED_CHOICE, ((self._ORDERED_CHOICE, ((self._ORDERED_CHOICE, ((self._ORDERED_CHOICE, ((self._VAR_NAME, (self.c_greater_than_or_equals, None)), (self._VAR_NAME, (self.c_less_than_or_equals, None)))), (self._VAR_NAME, (self.c_greater_than, None)))), (self._VAR_NAME, (self.c_less_than, None)))), (self._VAR_NAME, (self.c_equals, None)))))
+
+    @cache
     def add(self, position: int, dummy = None):
         """
         <add> = (<variable>/<data>), <whitespace>, <plus>, <whitespace>, (<variable>/<data>) ;
@@ -694,6 +789,55 @@ class Grammar_Parser(Parser):
         return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._VAR_NAME, (self.whitespace, None)), (self._VAR_NAME, (self.variable, None)))), (self._VAR_NAME, (self.open_bracket, None)))), (self._OPTIONAL, (self._SUBEXPRESSION, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._OPTIONAL, (self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.data, None)), (self._VAR_NAME, (self.variable, None)))))), (self._VAR_NAME, (self.whitespace, None)))), (self._ZERO_OR_MORE, (self._SUBEXPRESSION, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._VAR_NAME, (self.comma, None)), (self._VAR_NAME, (self.whitespace, None)))), (self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.data, None)), (self._VAR_NAME, (self.variable, None))))))), (self._VAR_NAME, (self.whitespace, None)))))))), (self._VAR_NAME, (self.whitespace, None)))))))), (self._VAR_NAME, (self.close_bracket, None)))), (self._VAR_NAME, (self.whitespace, None)))))
 
     @cache
+    def if_identifier(self, position: int, dummy = None):
+        """
+        <if_identifier> = "i", "f" ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._TERMINAL, "i"), (self._TERMINAL, "f"))))
+
+    @cache
+    def else_identifier(self, position: int, dummy = None):
+        """
+        <else_identifier> = "e", "l", "s", "e" ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._TERMINAL, "e"), (self._TERMINAL, "l"))), (self._TERMINAL, "s"))), (self._TERMINAL, "e"))))
+
+    @cache
+    def scope_open(self, position: int, dummy = None):
+        """
+        <scope_open> = "{" ;
+        """
+        return self._SUBEXPRESSION(position, (self._TERMINAL, "{"))
+
+    @cache
+    def scope_close(self, position: int, dummy = None):
+        """
+        <scope_close> = "}" ;
+        """
+        return self._SUBEXPRESSION(position, (self._TERMINAL, "}"))
+
+    @cache
+    def if_statement(self, position: int, dummy = None):
+        """
+        <if_statement> = <whitespace>, <if_identifier>, <space>, <comparison_operator> ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._VAR_NAME, (self.whitespace, None)), (self._VAR_NAME, (self.if_identifier, None)))), (self._VAR_NAME, (self.space, None)))), (self._VAR_NAME, (self.comparison_operator, None)))))
+
+    @cache
+    def else_statement(self, position: int, dummy = None):
+        """
+        <else_statement> = <whitespace>, <else_identifier> ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._VAR_NAME, (self.whitespace, None)), (self._VAR_NAME, (self.else_identifier, None)))))
+
+    @cache
+    def if_else_block(self, position: int, dummy = None):
+        """
+        <if_else_block> = <if_statement>, <space>, <scope_open>, <whitespace>, <line_terminator>, <TEXT_statement>+, <scope_close>, <line_terminator>, (<else_statement>, <space>, <scope_open>, <line_terminator>, <whitespace>, <TEXT_statement>+, <scope_close>, <line_terminator>)? ;
+        """
+        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._VAR_NAME, (self.if_statement, None)), (self._VAR_NAME, (self.space, None)))), (self._VAR_NAME, (self.scope_open, None)))), (self._VAR_NAME, (self.whitespace, None)))), (self._VAR_NAME, (self.line_terminator, None)))), (self._ONE_OR_MORE, (self._VAR_NAME, (self.TEXT_statement, None))))), (self._VAR_NAME, (self.scope_close, None)))), (self._VAR_NAME, (self.line_terminator, None)))), (self._OPTIONAL, (self._SUBEXPRESSION, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._VAR_NAME, (self.else_statement, None)), (self._VAR_NAME, (self.space, None)))), (self._VAR_NAME, (self.scope_open, None)))), (self._VAR_NAME, (self.line_terminator, None)))), (self._VAR_NAME, (self.whitespace, None)))), (self._ONE_OR_MORE, (self._VAR_NAME, (self.TEXT_statement, None))))), (self._VAR_NAME, (self.scope_close, None)))), (self._VAR_NAME, (self.line_terminator, None)))))))))
+
+    @cache
     def int(self, position: int, dummy = None):
         """
         <int> = <integer> ;
@@ -726,9 +870,9 @@ class Grammar_Parser(Parser):
     @cache
     def TEXT_statement(self, position: int, dummy = None):
         """
-        <TEXT_statement> = <variable>, <whitespace>, <equals>, (<maths>/<function_call>), <line_terminator> ;
+        <TEXT_statement> = (<variable>, <whitespace>, <equals>, (<maths>/<function_call>/(<whitespace>, <data>)/(<whitespace>, <variable>)), <line_terminator>)/(<whitespace>, <if_else_block>) ;
         """
-        return self._SUBEXPRESSION(position, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.whitespace, None)))), (self._VAR_NAME, (self.equals, None)))), (self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._VAR_NAME, (self.maths, None)), (self._VAR_NAME, (self.function_call, None))))))), (self._VAR_NAME, (self.line_terminator, None)))))
+        return self._SUBEXPRESSION(position, (self._ORDERED_CHOICE, ((self._SUBEXPRESSION, (self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._SEQUENCE, ((self._VAR_NAME, (self.variable, None)), (self._VAR_NAME, (self.whitespace, None)))), (self._VAR_NAME, (self.equals, None)))), (self._SUBEXPRESSION, (self._ORDERED_CHOICE, ((self._ORDERED_CHOICE, ((self._ORDERED_CHOICE, ((self._VAR_NAME, (self.maths, None)), (self._VAR_NAME, (self.function_call, None)))), (self._SUBEXPRESSION, (self._SEQUENCE, ((self._VAR_NAME, (self.whitespace, None)), (self._VAR_NAME, (self.data, None))))))), (self._SUBEXPRESSION, (self._SEQUENCE, ((self._VAR_NAME, (self.whitespace, None)), (self._VAR_NAME, (self.variable, None)))))))))), (self._VAR_NAME, (self.line_terminator, None))))), (self._SUBEXPRESSION, (self._SEQUENCE, ((self._VAR_NAME, (self.whitespace, None)), (self._VAR_NAME, (self.if_else_block, None))))))))
 
     @cache
     def RODATA_identifier(self, position: int, dummy = None):

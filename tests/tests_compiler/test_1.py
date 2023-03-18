@@ -289,3 +289,36 @@ def test_basic_unsigned_div():
     print(compiler)
     exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
     return exe, 50
+
+
+
+@run_wsl_code
+@writeout_executable
+def test_basic_if_else_block():
+    src = ""
+    src += "DATA\n"
+    src += "x = int_32 is 40\n"
+    src += "RODATA\n"
+    src += "y = int_32 is 30\n"
+    src += "BSS\n"
+    src += "z = int_32\n"
+    src += "TEXT\n"
+    src += "z = 100\n"
+    src += "if x > 25 {\n"
+    src += "y = 2400\n"
+    src += "x = y/x\n"
+    src += "}\n"
+    src += "else {\n"
+    src += "z = 400\n"
+    src += "}\n"
+    src += "z = syscall(x, z)\n"
+    src += "\n"
+    parser = Grammar_Parser()
+    resultant_position, bool, node = parser.parse(src, parser.grammar)
+    sym_table = SymbolTable()
+    text_node = sym_table.symbolize(node)
+    print(sym_table)
+    compiler = Compiler(sym_table, text_node)
+    print(compiler)
+    exe = Assembler(sym_table.DATA, sym_table.RODATA, sym_table.BSS, compiler.TEXT, arch=Architecture.x86_64).get_executable()
+    return exe, 50

@@ -6,7 +6,7 @@
 <ASCII> PASSTHROUGH = <Alphabet_Lower>/<Alphabet_Upper>/<Num>/<Spaces>/<Specials>; #Need to update packratparsergenerator to allow e.g uint[0-27] rather than needing to write everything out manually #
 
 <newline> DELETE = "\n";
-<space> DELETE = " ";
+<space> DELETE = " "+;
 <whitespace> DELETE = " "*;
 <equals> DELETE = "=";
 <underscore> DELETE = "_";
@@ -36,6 +36,17 @@
 <forward_slash> DELETE = "/";
 <star> DELETE = "*";
 
+<s_greater_than> DELETE = ">";
+<s_greater_than_or_equals> DELETE = ">", "=";
+<s_less_than> DELETE = "<";
+<s_less_than_or_equals> DELETE = "<", "=";
+<s_equals> DELETE = "=", "=";
+<c_greater_than_or_equals> = (<variable>/<data>), <whitespace>, <s_greater_than_or_equals>, <whitespace>, (<variable>/<data>);
+<c_greater_than> = (<variable>/<data>), <whitespace>, <s_greater_than>, <whitespace>, (<variable>/<data>);
+<c_less_than> = (<variable>/<data>), <whitespace>, <s_less_than>, <whitespace>, (<variable>/<data>);
+<c_less_than_or_equals> = (<variable>/<data>), <whitespace>, <s_less_than_or_equals>, <whitespace>, (<variable>/<data>);
+<c_equals> =  (<variable>/<data>), <whitespace>, <s_equals>, <whitespace>, (<variable>/<data>);
+<comparison_operator> PASSTHROUGH = <c_greater_than_or_equals>/<c_less_than_or_equals>/<c_greater_than>/<c_less_than>/<c_equals>;
 
 <add> = (<variable>/<data>), <whitespace>, <plus>, <whitespace>, (<variable>/<data>);
 <subtract> = (<variable>/<data>), <whitespace>, <minus>, <whitespace>, (<variable>/<data>);
@@ -46,13 +57,24 @@
 
 
 <function_call> = <whitespace>, <variable>, <open_bracket>, ((<data>/<variable>)?, <whitespace>, (<comma>, <whitespace>, (<data>/<variable>), <whitespace>)*, <whitespace>)?, <close_bracket>, <whitespace>;
+<if_identifier> DELETE = "i", "f";
+<else_identifier> DELETE = "e", "l", "s", "e";
+<scope_open> DELETE = "{";
+<scope_close> DELETE = "}";
+<if_statement> = <whitespace>, <if_identifier>, <space>, <comparison_operator>;
+<else_statement> = <whitespace>, <else_identifier>;
+
+<if_else_block> =   <if_statement>, <space>, <scope_open>, <whitespace>, <line_terminator>, <TEXT_statement>+, <scope_close>, <line_terminator>, 
+                    (<else_statement>, <space>, <scope_open>, <line_terminator>, <whitespace>, <TEXT_statement>+, <scope_close>, <line_terminator>)?;
+
 
 <int> COLLECT = <integer>;
 <data> PASSTHROUGH = <int>;
 
 <BSS_statement> = <variable>, <whitespace>, <equals>, <whitespace>, <memory_allocator>, <line_terminator>;
 <DATA_statement> = <variable>, <whitespace>, <equals>, <whitespace>, <memory_allocator>, <space>, <Is>, <space>, <data>, <line_terminator>; # Rodata and data handling is same one is just readonly#
-<TEXT_statement> = <variable>, <whitespace>, <equals>, (<maths>/<function_call>), <line_terminator>;
+<TEXT_statement> =  (<variable>, <whitespace>, <equals>, (<maths>/<function_call>/(<whitespace>, <data>)/(<whitespace>, <variable>)), <line_terminator>)
+                    / (<whitespace>, <if_else_block>) ;
 
 <RODATA_identifier> DELETE = "R", "O", "D", "A", "T", "A";
 <DATA_identifier> DELETE = "D", "A", "T", "A";

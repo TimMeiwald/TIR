@@ -58,7 +58,7 @@ class Int32():
         text = unary_instruction_r("DIV", reg, 32)
         opcode = Binary(0xF7, 1, 1)
         upper_64_prefix = Int32._calculate_prefix(reg1=reg)
-        register_pair = modrm(3, reg, 6) # Why 6 who knows, Guess they needed something why not 0 though
+        register_pair = modrm(3, reg, 6) 
         register_pair = Binary(register_pair, 1, 1)
         binary = upper_64_prefix + opcode + register_pair
         return binary, text
@@ -69,7 +69,7 @@ class Int32():
         text = unary_instruction_r("IDIV", reg, 32)
         opcode = Binary(0xF7, 1, 1)
         upper_64_prefix = Int32._calculate_prefix(reg1=reg)
-        register_pair = modrm(3, reg, 7) # Why 6 who knows, Guess they needed something why not 0 though
+        register_pair = modrm(3, reg, 7) 
         register_pair = Binary(register_pair, 1, 1)
         binary = upper_64_prefix + opcode + register_pair
         return binary, text

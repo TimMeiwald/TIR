@@ -66,6 +66,11 @@ class Compiler():
             self.text_statement(child)
             
     def text_statement(self, text_statement_node):
+        print(text_statement_node.type)
+        if(text_statement_node.children[0].type == Rules.if_else_block):
+            return
+
+
         variable_name = text_statement_node.children[0].content
         action_node = text_statement_node.children[1]
         if(action_node.type == Rules.add):
@@ -76,10 +81,16 @@ class Compiler():
             return
         elif(action_node.type == Rules.subtract):
             self.subtract(variable_name, action_node)
+            return
         elif(action_node.type == Rules.multiplication):
             self.imultiply(variable_name, action_node)
+            return
         elif(action_node.type == Rules.division):
             self.udiv(variable_name, action_node)
+            return
+        elif(action_node.type == Rules.int):
+            self.assign_int(variable_name, action_node)
+            return
         else:
             raise Exception(f"Node of type {text_statement_node.children[1].type.name} has not been implemented yet.")
 
@@ -95,6 +106,10 @@ class Compiler():
         registers = {"EAX": 0, "EDI": 7, "ECX": 1}
         source_register = registers[source_register]
         self.TEXT.push_instr(asm.Int32.load_register_value_to_memory_address_displacement_only(source_register, symbol_entry.address))
+
+    def assign_int(self, destination, assign_node):
+        self.TEXT.push_instr(asm.Int32.load_const_to_register_displacement_only(0, int(assign_node.content)))
+        self.load_to_symbol("EAX", destination)
 
     def add(self, destination, add_node):
         LHS = add_node.children[0]
